@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="actionBarButton">
+        <item name="android:background">@drawable/abs__item_background_holo_light</item>
+        <item name="android:paddingBottom">@dimen/abs__action_bar_icon_vertical_padding</item>
+        <item name="android:paddingTop">@dimen/abs__action_bar_icon_vertical_padding</item>
+    </style>
+</resources>
