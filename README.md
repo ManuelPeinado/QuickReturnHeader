@@ -5,17 +5,18 @@ QuickReturnHeader
 
 QuickReturnHeader is a tiny Android library that implements the popular ["quick return" design pattern][1] for lists and scrollable content in general.
 
-In this pattern, which can be found for instance in the Google Keep app, the header hides as soon as we start scrolling down, and reappears inmediately (regardless of how far down the list we are) as soon as we scroll upward again. A video is worth a thousand images:
+In this pattern, which can be found for instance in the Google Keep app, the header hides as soon as we start scrolling down, and reappears inmediately (regardless of how far down the list we are) as soon as we scroll up again. A video is worth a thousand images:
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=ldj-8Sne6-k
 " target="_blank"><img src="http://img.youtube.com/vi/ldj-8Sne6-k/0.jpg" 
 alt="QuickReturnHeader video" width="240" height="180" border="10" /></a>
 
-An alternative, more feature-complete implementation of the pattern can be found [here][2]. The benefits of QuickReturnHeader are that it's easier to use, it has a simpler implementation, and can be used with ScrollViews in addition to ListViews.
+An alternative, more feature-complete implementation of the pattern can be found [here][2]. The benefits of QuickReturnHeader are that it's easier to use, has a simpler implementation, and can be used with ScrollViews in addition to ListViews.
 
 Please keep in mind that this pattern (despite being used by Google itself in several applications) is [somewhat controversial][3]. Please read [this][4] before you decide whether you should use it in your application.
 
 ###Sample application
+
 A sample application showcasing the different features of the library is available:
 
 <a href="https://play.google.com/store/apps/details?id=com.manuelpeinado.fadingactionbar.demo">
@@ -23,7 +24,7 @@ A sample application showcasing the different features of the library is availab
        src="https://developer.android.com/images/brand/en_app_rgb_wo_45.png" />
 </a>
 
-You can browse the [source code][5] of this application to see how easy it is to integrate QuickReturnHeader in your application.
+You can browse its [source code][5] to see how easy it is to integrate QuickReturnHeader in your application.
 
 ###Including in your project
 
@@ -43,10 +44,10 @@ Just add the library to your application as a library project. Or if you use mav
 
 Using the library is really simple, just look at the source code of the provided samples:
 
-* [If your content should be in a `ScrollView`][5].
-* [If your content should be in a `ListView`][6].
+* [If your content should be in a `ScrollView`][6].
+* [If your content should be in a `ListView`][7].
 
-You can even use the library [from a fragment][7], which is useful when implementing a dual phone/tablet layout.
+You can even use the library [from a fragment][8], which is useful when implementing a dual phone/tablet layout.
 
 ###Who's using it
 
