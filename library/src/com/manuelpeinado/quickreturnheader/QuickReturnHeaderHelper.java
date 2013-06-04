@@ -49,7 +49,13 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
     private View content;
     private ViewGroup mContentContainer;
     private ViewGroup root;
-    protected int lastTop;
+    private int lastTop;
+    private boolean snapped = true;
+    private OnSnappedChangeListener onSnappedChangeListener;
+
+    public interface OnSnappedChangeListener {
+        void onSnappedChange(boolean snapped);
+    }
 
     public QuickReturnHeaderHelper(Context context, int contentResId, int headerResId) {
         this.context = context;
@@ -79,6 +85,10 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
             createScrollView();
         }
         return root;
+    }
+
+    public void setOnSnappedChangeListener(OnSnappedChangeListener onSnapListener) {
+        this.onSnappedChangeListener = onSnapListener;
     }
 
     private void createListView() {
@@ -115,13 +125,15 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
 
     private NotifyingScrollView.OnScrollChangedListener mOnScrollChangedListener = new NotifyingScrollView.OnScrollChangedListener() {
         public void onScrollChanged(ScrollView who, int l, int t, int oldl, int oldt) {
-            Log.v(TAG, "onScrollChanged(): t=" + t);
             if (t < 0) {
-                // Ignore overscroll
                 onNewScroll(headerHeight - headerTop);
             } else {
                 onNewScroll(lastTop - t);
             }
+            if (t <= 0) {
+                headerTop = 0;
+            }
+            snap(headerTop <= -t);
             lastTop = t;
         }
     };
@@ -129,6 +141,7 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
     @Override
     public void onScrollUpDownChanged(int delta, int scrollPosition, boolean exact) {
         onNewScroll(delta);
+        snap(headerTop == scrollPosition);
     }
 
     private void onNewScroll(int delta) {
@@ -141,7 +154,6 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
                 delta = -(headerHeight + headerTop);
             }
         }
-        Log.v(TAG, "delta(): delta=" + delta);
         headerTop += delta;
         // I'm aware that offsetTopAndBottom is more efficient, but it gave me trouble
         // when scrolling to the bottom of the list
@@ -149,6 +161,17 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
             realHeaderLayoutParams.topMargin = headerTop;
             realHeader.setLayoutParams(realHeaderLayoutParams);
         }
+    }
+
+    private void snap(boolean newValue) {
+        if (snapped == newValue) {
+            return;
+        }
+        snapped = newValue;
+        if (onSnappedChangeListener != null) {
+            onSnappedChangeListener.onSnappedChange(snapped);
+        }
+        Log.v(TAG, "snapped=" + snapped);
     }
 
     @Override
