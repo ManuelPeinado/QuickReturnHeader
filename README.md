@@ -7,9 +7,7 @@ QuickReturnHeader is a tiny Android library that implements the popular ["quick 
 
 In this pattern, which can be found for instance in the Google Keep app, the header hides as soon as we start scrolling down, and reappears inmediately (regardless of how far down the list we are) as soon as we scroll up again. A video is worth a thousand images:
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=ldj-8Sne6-k
-" target="_blank"><img src="http://img.youtube.com/vi/ldj-8Sne6-k/0.jpg" 
-alt="QuickReturnHeader video" width="240" height="180" border="10" /></a>
+*YouTube video coming soon*
 
 An alternative, more feature-complete implementation of the pattern can be found [here][2]. The benefits of QuickReturnHeader are that it's easier to use, has a simpler implementation, and can be used with ScrollViews in addition to ListViews.
 
@@ -19,10 +17,7 @@ Please keep in mind that this pattern (despite being used by Google itself in se
 
 A sample application showcasing the different features of the library is available:
 
-<a href="https://play.google.com/store/apps/details?id=com.manuelpeinado.fadingactionbar.demo">
-  <img alt="Android app on Google Play"
-       src="https://developer.android.com/images/brand/en_app_rgb_wo_45.png" />
-</a>
+*Google Play link coming soon*
 
 You can browse its [source code][5] to see how easy it is to integrate QuickReturnHeader in your application.
 
