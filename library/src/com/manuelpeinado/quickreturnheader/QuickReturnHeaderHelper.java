@@ -24,6 +24,8 @@ import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -33,7 +35,7 @@ import android.widget.ScrollView;
 import com.cyrilmottier.android.translucentactionbar.NotifyingScrollView;
 import com.manuelpeinado.quickreturnheader.ListViewScrollObserver.OnListViewScrollListener;
 
-public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlobalLayoutListener {
+public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     protected static final String TAG = "QuickReturnHeaderHelper";
     private View realHeader;
     private FrameLayout.LayoutParams realHeaderLayoutParams;
@@ -52,6 +54,18 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
     private int lastTop;
     private boolean snapped = true;
     private OnSnappedChangeListener onSnappedChangeListener;
+    private Animation animation;
+    /**
+     * True if the last scroll movement was in the "up" direction.
+     */
+    private boolean scrollingUp;
+    /**
+     * Maximum time it takes the show/hide animation to complete. Maximum because it will take much less time if the
+     * header is already partially hidden or shown.
+     * <p>
+     * In milliseconds.
+     */
+    private static final long ANIMATION_DURATION = 400;
 
     public interface OnSnappedChangeListener {
         void onSnappedChange(boolean snapped);
@@ -97,7 +111,19 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
 
         listView.getViewTreeObserver().addOnGlobalLayoutListener(this);
         ListViewScrollObserver observer = new ListViewScrollObserver(listView);
-        observer.setOnScrollUpAndDownListener(this);
+        //        listView.setOnScrollListener(this);
+        observer.setOnScrollUpAndDownListener(new OnListViewScrollListener() {
+            @Override
+            public void onScrollUpDownChanged(int delta, int scrollPosition, boolean exact) {
+                onNewScroll(delta);
+                snap(headerTop == scrollPosition);
+            }
+
+            @Override
+            public void onScrollIdle() {
+                QuickReturnHeaderHelper.this.onScrollIdle();
+            }
+        });
 
         root.addView(realHeader, realHeaderLayoutParams);
 
@@ -124,6 +150,7 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
     }
 
     private NotifyingScrollView.OnScrollChangedListener mOnScrollChangedListener = new NotifyingScrollView.OnScrollChangedListener() {
+        @Override
         public void onScrollChanged(ScrollView who, int l, int t, int oldl, int oldt) {
             if (t < 0) {
                 onNewScroll(headerHeight - headerTop);
@@ -136,29 +163,96 @@ public class QuickReturnHeaderHelper implements OnListViewScrollListener, OnGlob
             snap(headerTop <= -t);
             lastTop = t;
         }
+        
+        @Override
+        public void onScrollIdle() {
+            QuickReturnHeaderHelper.this.onScrollIdle();
+        }
     };
 
-    @Override
-    public void onScrollUpDownChanged(int delta, int scrollPosition, boolean exact) {
-        onNewScroll(delta);
-        snap(headerTop == scrollPosition);
+    /**
+     * Invoked when the user stops scrolling the content. In response we might start an animation to leave the header in
+     * a fully open or fully closed state.
+     */
+    private void onScrollIdle() {
+        if (snapped) {
+            // Only animate when header is out of its natural position (truly over the content).
+            return;
+        }
+        if (headerTop > 0 || headerTop <= -headerHeight) {
+            // Fully hidden, to need to animate.
+            return;
+        }
+        if (scrollingUp) {
+            hideHeader();
+        } else {
+            showHeader();
+        }
+    }
+
+    /**
+     * Shows the header using a simple downwards translation animation.
+     */
+    private void showHeader() {
+        animateHeader(headerTop, 0);
+    }
+
+    /**
+     * Hides the header using a simple upwards translation animation.
+     */
+    private void hideHeader() {
+        animateHeader(headerTop, -headerHeight);
+    }
+
+    /**
+     * Animates the marginTop property of the header between two specified values.
+     * @param startTop Initial value for the marginTop property.
+     * @param endTop End value for the marginTop property.
+     */
+    private void animateHeader(final float startTop, float endTop) {
+        Log.v(TAG, "animateHeader");
+        cancelAnimation();
+        final float deltaTop = endTop - startTop;
+        animation = new Animation() {
+            @Override
+            protected void applyTransformation(float interpolatedTime, Transformation t) {
+                headerTop = (int) (startTop + deltaTop * interpolatedTime);
+                realHeaderLayoutParams.topMargin = headerTop;
+                realHeader.setLayoutParams(realHeaderLayoutParams);
+            }
+        };
+        long duration = (long) (deltaTop / (float) headerHeight * ANIMATION_DURATION);
+        animation.setDuration(Math.abs(duration));
+        realHeader.startAnimation(animation);
+    }
+
+    private void cancelAnimation() {
+        if (animation != null) {
+            realHeader.clearAnimation();
+            animation = null;
+        }
     }
 
     private void onNewScroll(int delta) {
+        cancelAnimation();
         if (delta > 0) {
             if (headerTop + delta > 0) {
                 delta = -headerTop;
             }
-        } else {
+        } else if (delta < 0) {
             if (headerTop + delta < -headerHeight) {
                 delta = -(headerHeight + headerTop);
             }
+        } else {
+            return;
         }
+        scrollingUp = delta < 0;
+        Log.v(TAG, "delta=" + delta);
         headerTop += delta;
-        // I'm aware that offsetTopAndBottom is more efficient, but it gave me trouble
-        // when scrolling to the bottom of the list
+        // I'm aware that offsetTopAndBottom is more efficient, but it gave me trouble when scrolling to the bottom of the list
         if (realHeaderLayoutParams.topMargin != headerTop) {
             realHeaderLayoutParams.topMargin = headerTop;
+            Log.v(TAG, "topMargin=" + headerTop);
             realHeader.setLayoutParams(realHeaderLayoutParams);
         }
     }

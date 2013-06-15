@@ -3,6 +3,7 @@ package com.cyrilmottier.android.translucentactionbar;
 import android.content.Context;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.widget.ScrollView;
 
 /**
@@ -13,13 +14,15 @@ public class NotifyingScrollView extends ScrollView {
     private boolean mDisableEdgeEffects = true;
 
     /**
-     * @author Cyril Mottier
+     * @author Cyril Mottier with modifications from Manuel Peinado
      */
     public interface OnScrollChangedListener {
         void onScrollChanged(ScrollView who, int l, int t, int oldl, int oldt);
+        void onScrollIdle();
     }
 
     private OnScrollChangedListener mOnScrollChangedListener;
+    private boolean mScrollChangedSinceLastIdle;
 
     public NotifyingScrollView(Context context) {
         super(context);
@@ -36,6 +39,7 @@ public class NotifyingScrollView extends ScrollView {
     @Override
     protected void onScrollChanged(int l, int t, int oldl, int oldt) {
         super.onScrollChanged(l, t, oldl, oldt);
+        mScrollChangedSinceLastIdle = true;
         if (mOnScrollChangedListener != null) {
             mOnScrollChangedListener.onScrollChanged(this, l, t, oldl, oldt);
         }
@@ -61,5 +65,17 @@ public class NotifyingScrollView extends ScrollView {
             return 0.0f;
         }
         return super.getBottomFadingEdgeStrength();
+    }
+    
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        boolean b = super.onTouchEvent(ev);
+        if (ev.getAction() == MotionEvent.ACTION_UP) {
+            if (mOnScrollChangedListener != null && mScrollChangedSinceLastIdle) {
+                mScrollChangedSinceLastIdle = false;
+                mOnScrollChangedListener.onScrollIdle();
+            }
+        }
+        return b;
     }
 }

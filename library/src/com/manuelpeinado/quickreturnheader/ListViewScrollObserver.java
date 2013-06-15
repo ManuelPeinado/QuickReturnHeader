@@ -29,6 +29,7 @@ public class ListViewScrollObserver implements OnScrollListener {
 
     public interface OnListViewScrollListener {
         void onScrollUpDownChanged(int delta, int scrollPosition, boolean exact);
+        void onScrollIdle();
     }
 
     public ListViewScrollObserver(ListView listView) {
@@ -70,5 +71,8 @@ public class ListViewScrollObserver implements OnScrollListener {
 
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
+        if (listener != null && scrollState == SCROLL_STATE_IDLE) {
+            listener.onScrollIdle();
+        }
     }
 }
