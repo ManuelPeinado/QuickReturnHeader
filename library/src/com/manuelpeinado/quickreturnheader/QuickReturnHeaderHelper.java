@@ -129,7 +129,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         root.addView(realHeader, realHeaderLayoutParams);
 
         dummyHeader = new View(context);
-        AbsListView.LayoutParams params = new AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        AbsListView.LayoutParams params = new AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, headerHeight);
         dummyHeader.setLayoutParams(params);
         listView.addHeaderView(dummyHeader);
     }
@@ -273,6 +273,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     public void onGlobalLayout() {
         if (realHeader.getHeight() != headerHeight) {
             headerHeight = realHeader.getHeight();
+            Log.v(TAG, "headerHeight=" + headerHeight);
             LayoutParams params = dummyHeader.getLayoutParams();
             params.height = headerHeight;
             dummyHeader.setLayoutParams(params);
