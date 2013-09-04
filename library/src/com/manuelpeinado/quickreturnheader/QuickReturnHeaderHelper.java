@@ -28,6 +28,7 @@ import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.FrameLayout;
 import android.widget.ScrollView;
@@ -146,6 +147,10 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
             root.addView(stickyHeader, stickyHeaderLayouParams);
         }
 
+        setupListDummyHeader();
+    }
+
+    private void setupListDummyHeader() {
         dummyHeader = new View(context);
         AbsListView.LayoutParams params = new AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         dummyHeader.setLayoutParams(params);
@@ -296,12 +301,22 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         Log.v(TAG, "snapped=" + snapped);
     }
 
+    public View getStickyHeader() {
+        return stickyHeader;
+    }
+
+    public View getQuickReturnHeader() {
+        return realHeader;
+    }
+
     @Override
     public void onGlobalLayout() {
-        int h = stickyHeader == null? realHeader.getHeight() : realHeader.getHeight() + stickyHeader.getHeight();
-        if (h != headerHeight) {
+        int auxRealHeaderHeight = realHeader.getVisibility() == View.VISIBLE? realHeader.getHeight() : 0;
+        int auxStickyHeaderHeight = stickyHeader != null && stickyHeader.getVisibility() == View.VISIBLE? stickyHeader.getHeight() : 0;
+        if (auxRealHeaderHeight + auxStickyHeaderHeight != headerHeight) {
             realHeaderHeight = realHeader.getHeight();
-            headerHeight = h;
+            headerHeight = auxRealHeaderHeight + auxStickyHeaderHeight;
+            Log.v(TAG, "headerHeight=" + headerHeight);
             LayoutParams params = dummyHeader.getLayoutParams();
             params.height = headerHeight;
             dummyHeader.setLayoutParams(params);
