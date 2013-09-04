@@ -43,8 +43,8 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     private int headerTop;
     private View dummyHeader;
     private int contentResId;
+    private int listResId;
     private int headerResId;
-    private boolean waitingForExactHeaderHeight = true;
     private Context context;
     private ListView listView;
     private LayoutInflater inflater;
@@ -71,9 +71,10 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         void onSnappedChange(boolean snapped);
     }
 
-    public QuickReturnHeaderHelper(Context context, int contentResId, int headerResId) {
+    public QuickReturnHeaderHelper(Context context, int contentResId, int listResId, int headerResId) {
         this.context = context;
         this.contentResId = contentResId;
+        this.listResId = listResId;
         this.headerResId = headerResId;
     }
 
@@ -92,7 +93,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         realHeader.measure(widthMeasureSpec, heightMeasureSpec);
         headerHeight = realHeader.getMeasuredHeight();
 
-        listView = (ListView) content.findViewById(android.R.id.list);
+        listView = (ListView) content.findViewById(listResId);
         if (listView != null) {
             createListView();
         } else {
@@ -128,7 +129,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         root.addView(realHeader, realHeaderLayoutParams);
 
         dummyHeader = new View(context);
-        AbsListView.LayoutParams params = new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, headerHeight);
+        AbsListView.LayoutParams params = new AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         dummyHeader.setLayoutParams(params);
         listView.addHeaderView(dummyHeader);
     }
@@ -145,7 +146,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         mContentContainer.addView(content);
 
         dummyHeader = mContentContainer.findViewById(R.id.rqh__content_top_margin);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, headerHeight);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, headerHeight);
         dummyHeader.setLayoutParams(params);
     }
 
@@ -270,9 +271,8 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
 
     @Override
     public void onGlobalLayout() {
-        if (waitingForExactHeaderHeight && dummyHeader.getHeight() > 0) {
-            headerHeight = dummyHeader.getHeight();
-            waitingForExactHeaderHeight = false;
+        if (realHeader.getHeight() != headerHeight) {
+            headerHeight = realHeader.getHeight();
             LayoutParams params = dummyHeader.getLayoutParams();
             params.height = headerHeight;
             dummyHeader.setLayoutParams(params);
