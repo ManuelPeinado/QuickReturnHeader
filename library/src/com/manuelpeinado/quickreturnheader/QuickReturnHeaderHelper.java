@@ -27,9 +27,9 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.FrameLayout;
 import android.widget.ScrollView;
 
 import com.cyrilmottier.android.translucentactionbar.NotifyingScrollView;
@@ -38,13 +38,16 @@ import com.manuelpeinado.quickreturnheader.ListViewScrollObserver.OnListViewScro
 public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     protected static final String TAG = "QuickReturnHeaderHelper";
     private View realHeader;
-    private FrameLayout.LayoutParams realHeaderLayoutParams;
+    private View stickyHeader;
+    private FrameLayout.LayoutParams realHeaderLayoutParams, stickyHeaderLayouParams;
+    private int realHeaderHeight;
     private int headerHeight;
     private int headerTop;
     private View dummyHeader;
     private int contentResId;
     private int listResId;
     private int headerResId;
+    private int stickyHeaderResId;
     private Context context;
     private ListView listView;
     private LayoutInflater inflater;
@@ -62,7 +65,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     /**
      * Maximum time it takes the show/hide animation to complete. Maximum because it will take much less time if the
      * header is already partially hidden or shown.
-     * <p>
+     * <p/>
      * In milliseconds.
      */
     private static final long ANIMATION_DURATION = 400;
@@ -72,10 +75,15 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     }
 
     public QuickReturnHeaderHelper(Context context, int contentResId, int listResId, int headerResId) {
+        this(context, contentResId, listResId, headerResId, 0);
+    }
+
+    public QuickReturnHeaderHelper(Context context, int contentResId, int listResId, int headerResId, int stickyHeaderResId) {
         this.context = context;
         this.contentResId = contentResId;
         this.listResId = listResId;
         this.headerResId = headerResId;
+        this.stickyHeaderResId = stickyHeaderResId;
     }
 
     public View createView() {
@@ -86,7 +94,13 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         realHeaderLayoutParams = new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         realHeaderLayoutParams.gravity = Gravity.TOP;
 
-        // Use measured height here as an estimate of the header height, later on after the layout is complete 
+        if (stickyHeaderResId != 0) {
+            stickyHeader = inflater.inflate(stickyHeaderResId, null);
+            stickyHeaderLayouParams = new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            stickyHeaderLayouParams.gravity = Gravity.TOP;
+        }
+
+        // Use measured height here as an estimate of the header height, later on after the layout is complete
         // we'll use the actual height
         int widthMeasureSpec = MeasureSpec.makeMeasureSpec(LayoutParams.MATCH_PARENT, MeasureSpec.EXACTLY);
         int heightMeasureSpec = MeasureSpec.makeMeasureSpec(LayoutParams.WRAP_CONTENT, MeasureSpec.EXACTLY);
@@ -126,10 +140,14 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
             }
         });
 
+        realHeader.setId(R.id.real_header);
         root.addView(realHeader, realHeaderLayoutParams);
+        if (stickyHeader != null) {
+            root.addView(stickyHeader, stickyHeaderLayouParams);
+        }
 
         dummyHeader = new View(context);
-        AbsListView.LayoutParams params = new AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, headerHeight);
+        AbsListView.LayoutParams params = new AbsListView.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         dummyHeader.setLayoutParams(params);
         listView.addHeaderView(dummyHeader);
     }
@@ -141,6 +159,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         scrollView.setOnScrollChangedListener(mOnScrollChangedListener);
 
         root.addView(realHeader, realHeaderLayoutParams);
+        root.addView(stickyHeader, stickyHeaderLayouParams);
 
         mContentContainer = (ViewGroup) root.findViewById(R.id.rqh__container);
         mContentContainer.addView(content);
@@ -164,7 +183,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
             snap(headerTop <= -t);
             lastTop = t;
         }
-        
+
         @Override
         public void onScrollIdle() {
             QuickReturnHeaderHelper.this.onScrollIdle();
@@ -207,8 +226,9 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
 
     /**
      * Animates the marginTop property of the header between two specified values.
+     *
      * @param startTop Initial value for the marginTop property.
-     * @param endTop End value for the marginTop property.
+     * @param endTop   End value for the marginTop property.
      */
     private void animateHeader(final float startTop, float endTop) {
         Log.v(TAG, "animateHeader");
@@ -218,8 +238,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 headerTop = (int) (startTop + deltaTop * interpolatedTime);
-                realHeaderLayoutParams.topMargin = headerTop;
-                realHeader.setLayoutParams(realHeaderLayoutParams);
+                setViewsTopMargin();
             }
         };
         long duration = (long) (deltaTop / (float) headerHeight * ANIMATION_DURATION);
@@ -252,9 +271,17 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         headerTop += delta;
         // I'm aware that offsetTopAndBottom is more efficient, but it gave me trouble when scrolling to the bottom of the list
         if (realHeaderLayoutParams.topMargin != headerTop) {
-            realHeaderLayoutParams.topMargin = headerTop;
-            Log.v(TAG, "topMargin=" + headerTop);
-            realHeader.setLayoutParams(realHeaderLayoutParams);
+            setViewsTopMargin();
+        }
+    }
+
+    private void setViewsTopMargin() {
+        realHeaderLayoutParams.topMargin = headerTop;
+        Log.v(TAG, "topMargin=" + headerTop);
+        realHeader.setLayoutParams(realHeaderLayoutParams);
+        if (stickyHeader != null) {
+            stickyHeaderLayouParams.topMargin = Math.max(realHeaderHeight + headerTop, 0);
+            stickyHeader.setLayoutParams(stickyHeaderLayouParams);
         }
     }
 
@@ -271,12 +298,15 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
 
     @Override
     public void onGlobalLayout() {
-        if (realHeader.getHeight() != headerHeight) {
-            headerHeight = realHeader.getHeight();
-            Log.v(TAG, "headerHeight=" + headerHeight);
+        int h = stickyHeader == null? realHeader.getHeight() : realHeader.getHeight() + stickyHeader.getHeight();
+        if (h != headerHeight) {
+            realHeaderHeight = realHeader.getHeight();
+            headerHeight = h;
             LayoutParams params = dummyHeader.getLayoutParams();
             params.height = headerHeight;
             dummyHeader.setLayoutParams(params);
+
+            setViewsTopMargin();
         }
     }
 }
