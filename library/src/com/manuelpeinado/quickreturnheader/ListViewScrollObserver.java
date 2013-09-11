@@ -22,6 +22,7 @@ import android.widget.ListView;
 
 public class ListViewScrollObserver implements OnScrollListener {
     private OnListViewScrollListener listener;
+    private OnScrollListener onScrollListener;
     private int lastFirstVisibleItem;
     private int lastTop;
     private int scrollPosition;
@@ -32,8 +33,9 @@ public class ListViewScrollObserver implements OnScrollListener {
         void onScrollIdle();
     }
 
-    public ListViewScrollObserver(ListView listView) {
+    public ListViewScrollObserver(ListView listView, OnScrollListener onScrollListener) {
         listView.setOnScrollListener(this);
+        this.onScrollListener = onScrollListener;
     }
 
     public void setOnScrollUpAndDownListener(OnListViewScrollListener listener) {
@@ -67,12 +69,20 @@ public class ListViewScrollObserver implements OnScrollListener {
         lastFirstVisibleItem = firstVisibleItem;
         lastTop = top;
         lastHeight = firstChild.getHeight();
+
+        if (onScrollListener != null) {
+            onScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
+        }
     }
 
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
         if (listener != null && scrollState == SCROLL_STATE_IDLE) {
             listener.onScrollIdle();
+        }
+
+        if (onScrollListener != null) {
+            onScrollListener.onScrollStateChanged(view, scrollState);
         }
     }
 }

@@ -27,10 +27,9 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
-import android.widget.LinearLayout;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
 
 import com.cyrilmottier.android.translucentactionbar.NotifyingScrollView;
@@ -59,6 +58,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     private boolean snapped = true;
     private OnSnappedChangeListener onSnappedChangeListener;
     private Animation animation;
+    private AbsListView.OnScrollListener onScrollListener;
     /**
      * True if the last scroll movement was in the "up" direction.
      */
@@ -75,16 +75,59 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         void onSnappedChange(boolean snapped);
     }
 
-    public QuickReturnHeaderHelper(Context context, int contentResId, int listResId, int headerResId) {
-        this(context, contentResId, listResId, headerResId, 0);
+    public static class Builder {
+
+        private Context context;
+        private int contentResId, listResId, headerResId, stickyHeaderResId;
+        private AbsListView.OnScrollListener onScrollListener;
+
+        public Builder setContext(Context context) {
+            this.context = context;
+            return this;
+        }
+
+        public Builder setContentResId(int contentResId) {
+            this.contentResId = contentResId;
+            return this;
+        }
+
+        public Builder setListResId(int listResId) {
+            this.listResId = listResId;
+            return this;
+        }
+
+        public Builder setHeaderResId(int headerResId) {
+            this.headerResId = headerResId;
+            return this;
+        }
+
+        public Builder setStickyHeaderResId(int stickyHeaderResId) {
+            this.stickyHeaderResId = stickyHeaderResId;
+            return this;
+        }
+
+        public Builder setOnScrollListener(AbsListView.OnScrollListener onScrollListener) {
+            this.onScrollListener = onScrollListener;
+            return this;
+        }
+
+        public QuickReturnHeaderHelper build() {
+            return new QuickReturnHeaderHelper(context, contentResId, listResId, headerResId, stickyHeaderResId, onScrollListener);
+        }
     }
 
-    public QuickReturnHeaderHelper(Context context, int contentResId, int listResId, int headerResId, int stickyHeaderResId) {
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    private QuickReturnHeaderHelper(Context context, int contentResId, int listResId,
+                                    int headerResId, int stickyHeaderResId, AbsListView.OnScrollListener onScrollListener) {
         this.context = context;
         this.contentResId = contentResId;
         this.listResId = listResId;
         this.headerResId = headerResId;
         this.stickyHeaderResId = stickyHeaderResId;
+        this.onScrollListener = onScrollListener;
     }
 
     public View createView() {
@@ -126,7 +169,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         root.addView(content);
 
         listView.getViewTreeObserver().addOnGlobalLayoutListener(this);
-        ListViewScrollObserver observer = new ListViewScrollObserver(listView);
+        ListViewScrollObserver observer = new ListViewScrollObserver(listView, onScrollListener);
         //        listView.setOnScrollListener(this);
         observer.setOnScrollUpAndDownListener(new OnListViewScrollListener() {
             @Override
