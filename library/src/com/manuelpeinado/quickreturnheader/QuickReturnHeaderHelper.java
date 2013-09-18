@@ -149,7 +149,6 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         int widthMeasureSpec = MeasureSpec.makeMeasureSpec(LayoutParams.MATCH_PARENT, MeasureSpec.EXACTLY);
         int heightMeasureSpec = MeasureSpec.makeMeasureSpec(LayoutParams.WRAP_CONTENT, MeasureSpec.EXACTLY);
         realHeader.measure(widthMeasureSpec, heightMeasureSpec);
-        headerHeight = realHeader.getMeasuredHeight();
 
         listView = (ListView) content.findViewById(listResId);
         if (listView != null) {
@@ -356,6 +355,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     public void onGlobalLayout() {
         int auxRealHeaderHeight = realHeader.getVisibility() == View.VISIBLE? realHeader.getHeight() : 0;
         int auxStickyHeaderHeight = stickyHeader != null && stickyHeader.getVisibility() == View.VISIBLE? stickyHeader.getHeight() : 0;
+        Log.e(TAG, auxRealHeaderHeight+" "+auxStickyHeaderHeight);
         if (auxRealHeaderHeight + auxStickyHeaderHeight != headerHeight) {
             realHeaderHeight = realHeader.getHeight();
             headerHeight = auxRealHeaderHeight + auxStickyHeaderHeight;
