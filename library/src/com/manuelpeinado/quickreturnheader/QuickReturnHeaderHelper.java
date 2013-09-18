@@ -355,7 +355,6 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     public void onGlobalLayout() {
         int auxRealHeaderHeight = realHeader.getVisibility() == View.VISIBLE? realHeader.getHeight() : 0;
         int auxStickyHeaderHeight = stickyHeader != null && stickyHeader.getVisibility() == View.VISIBLE? stickyHeader.getHeight() : 0;
-        Log.e(TAG, auxRealHeaderHeight+" "+auxStickyHeaderHeight);
         if (auxRealHeaderHeight + auxStickyHeaderHeight != headerHeight) {
             realHeaderHeight = realHeader.getHeight();
             headerHeight = auxRealHeaderHeight + auxStickyHeaderHeight;
