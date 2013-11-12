@@ -16,7 +16,6 @@
 package com.manuelpeinado.quickreturnheader;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -169,17 +168,28 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
 
         listView.getViewTreeObserver().addOnGlobalLayoutListener(this);
         ListViewScrollObserver observer = new ListViewScrollObserver(listView, onScrollListener);
-        //        listView.setOnScrollListener(this);
+
         observer.setOnScrollUpAndDownListener(new OnListViewScrollListener() {
+
+            private boolean doScroll = false;
+
             @Override
             public void onScrollUpDownChanged(int delta, int scrollPosition, boolean exact) {
-                onNewScroll(delta);
-                snap(headerTop == scrollPosition);
+
+                doScroll |= delta < 0 || delta > 200;
+
+                if (doScroll) {
+                    onNewScroll(delta);
+                    snap(headerTop == scrollPosition);
+                }
             }
 
             @Override
             public void onScrollIdle() {
-                QuickReturnHeaderHelper.this.onScrollIdle();
+                if (doScroll) {
+                    QuickReturnHeaderHelper.this.onScrollIdle();
+                    doScroll = false;
+                }
             }
         });
 
@@ -278,7 +288,6 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
      * @param endTop   End value for the marginTop property.
      */
     private void animateHeader(final float startTop, float endTop) {
-        Log.v(TAG, "animateHeader");
         cancelAnimation();
         final float deltaTop = endTop - startTop;
         animation = new Animation() {
@@ -301,6 +310,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     }
 
     private void onNewScroll(int delta) {
+
         cancelAnimation();
         if (delta > 0) {
             if (headerTop + delta > 0) {
@@ -314,7 +324,6 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
             return;
         }
         scrollingUp = delta < 0;
-        Log.v(TAG, "delta=" + delta);
         headerTop += delta;
         // I'm aware that offsetTopAndBottom is more efficient, but it gave me trouble when scrolling to the bottom of the list
         if (realHeaderLayoutParams.topMargin != headerTop) {
@@ -324,7 +333,6 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
 
     private void setViewsTopMargin() {
         realHeaderLayoutParams.topMargin = headerTop;
-        Log.v(TAG, "topMargin=" + headerTop);
         realHeader.setLayoutParams(realHeaderLayoutParams);
         if (stickyHeader != null) {
             stickyHeaderLayouParams.topMargin = Math.max(realHeaderHeight + headerTop, 0);
@@ -340,7 +348,6 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         if (onSnappedChangeListener != null) {
             onSnappedChangeListener.onSnappedChange(snapped);
         }
-        Log.v(TAG, "snapped=" + snapped);
     }
 
     public View getStickyHeader() {
@@ -353,12 +360,11 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
 
     @Override
     public void onGlobalLayout() {
-        int auxRealHeaderHeight = realHeader.getVisibility() == View.VISIBLE? realHeader.getHeight() : 0;
-        int auxStickyHeaderHeight = stickyHeader != null && stickyHeader.getVisibility() == View.VISIBLE? stickyHeader.getHeight() : 0;
+        int auxRealHeaderHeight = realHeader.getVisibility() == View.VISIBLE ? realHeader.getHeight() : 0;
+        int auxStickyHeaderHeight = stickyHeader != null && stickyHeader.getVisibility() == View.VISIBLE ? stickyHeader.getHeight() : 0;
         if (auxRealHeaderHeight + auxStickyHeaderHeight != headerHeight) {
             realHeaderHeight = realHeader.getHeight();
             headerHeight = auxRealHeaderHeight + auxStickyHeaderHeight;
-            Log.v(TAG, "headerHeight=" + headerHeight);
             LayoutParams params = dummyHeader.getLayoutParams();
             params.height = headerHeight;
             dummyHeader.setLayoutParams(params);
