@@ -15,7 +15,6 @@
  */
 package com.manuelpeinado.quickreturnheader;
 
-import android.util.Log;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
@@ -24,18 +23,20 @@ import android.widget.ListView;
 public class ListViewScrollObserver implements OnScrollListener {
     private OnListViewScrollListener listener;
     private OnScrollListener onScrollListener;
+    private int dividerHeight;
     private int lastFirstVisibleItem;
     private int lastTop;
     private int scrollPosition;
     private int lastHeight;
 
     public interface OnListViewScrollListener {
-        void onScrollUpDownChanged(int delta, int scrollPosition, boolean exact);
+        void onScrollUpDownChanged(int delta, int scrollPosition, int firstVisibleItem, boolean exact);
         void onScrollIdle();
     }
 
     public ListViewScrollObserver(ListView listView, OnScrollListener onScrollListener) {
         listView.setOnScrollListener(this);
+        this.dividerHeight = listView.getDividerHeight();
         this.onScrollListener = onScrollListener;
     }
 
@@ -55,25 +56,21 @@ public class ListViewScrollObserver implements OnScrollListener {
         int skipped = 0;
         if (lastFirstVisibleItem == firstVisibleItem) {
             delta = lastTop - top;
-            Log.d("QuickReturn", "lastFirstVisibleItem == firstVisibleItem " + String.valueOf(delta));
         } else if (firstVisibleItem > lastFirstVisibleItem) {
             skipped = firstVisibleItem - lastFirstVisibleItem - 1;
-            delta = skipped * height + lastHeight + lastTop - top;
-            Log.d("QuickReturn", "firstVisibleItem > lastFirstVisibleItem " + String.valueOf(delta));
+            delta = skipped * (height + dividerHeight) + lastHeight + lastTop + dividerHeight - top;
         } else {
             skipped = lastFirstVisibleItem - firstVisibleItem - 1;
-            delta = skipped * -height + lastTop - (height + top);
-            // FIXME delta calculation is wrong (positive)
-            Log.d("QuickReturn", "else " + String.valueOf(delta));
+            delta = skipped * -(height + dividerHeight) + lastTop - (height + dividerHeight + top);
         }
         boolean exact = skipped == 0;
         scrollPosition += -delta;
         if (listener != null) {
-            listener.onScrollUpDownChanged(-delta, scrollPosition, exact);
+            listener.onScrollUpDownChanged(-delta, scrollPosition, firstVisibleItem, exact);
         }
         lastFirstVisibleItem = firstVisibleItem;
         lastTop = top;
-        lastHeight = firstChild.getHeight();
+        lastHeight = height;
 
         if (onScrollListener != null) {
             onScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);

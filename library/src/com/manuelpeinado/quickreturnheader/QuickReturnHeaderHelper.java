@@ -54,6 +54,7 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
     private ViewGroup mContentContainer;
     private ViewGroup root;
     private int lastTop;
+    private int threshold = 0;
     private boolean snapped = true;
     private OnSnappedChangeListener onSnappedChangeListener;
     private Animation animation;
@@ -174,9 +175,9 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
             private boolean doScroll = false;
 
             @Override
-            public void onScrollUpDownChanged(int delta, int scrollPosition, boolean exact) {
+            public void onScrollUpDownChanged(int delta, int scrollPosition, int firstVisibleItem, boolean exact) {
 
-                doScroll |= delta < 0 || delta > 200;
+                doScroll |= firstVisibleItem == 0 || delta < 0 || delta > threshold;
 
                 if (doScroll) {
                     onNewScroll(delta);
@@ -356,6 +357,14 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
 
     public View getQuickReturnHeader() {
         return realHeader;
+    }
+
+    public int getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(int threshold) {
+        this.threshold = threshold;
     }
 
     @Override
