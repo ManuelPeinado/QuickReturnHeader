@@ -177,9 +177,9 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
             @Override
             public void onScrollUpDownChanged(int delta, int scrollPosition, int firstVisibleItem, boolean exact) {
 
-                doScroll |= firstVisibleItem == 0 || delta < 0 || delta > threshold;
+                doScroll |=  delta > threshold;
 
-                if (doScroll) {
+                if (doScroll || firstVisibleItem == 0 || delta < 0) {
                     onNewScroll(delta);
                     snap(headerTop == scrollPosition);
                 }
