@@ -55,9 +55,15 @@ public class ListViewScrollObserver implements OnScrollListener {
         } else if (firstVisibleItem > lastFirstVisibleItem) {
             skipped = firstVisibleItem - lastFirstVisibleItem - 1;
             delta = skipped * height + lastHeight + lastTop - top;
+            if (view instanceof ListView) {
+                delta += ((ListView) view).getDividerHeight();
+            }
         } else {
             skipped = lastFirstVisibleItem - firstVisibleItem - 1;
             delta = skipped * -height + lastTop - (height + top);
+            if (view instanceof ListView) {
+                delta -= ((ListView) view).getDividerHeight();
+            }
         }
         boolean exact = skipped > 0;
         scrollPosition += -delta;
