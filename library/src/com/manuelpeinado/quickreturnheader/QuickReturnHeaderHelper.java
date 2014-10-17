@@ -88,7 +88,9 @@ public class QuickReturnHeaderHelper implements OnGlobalLayoutListener {
         // Use measured height here as an estimate of the header height, later on after the layout is complete 
         // we'll use the actual height
         int widthMeasureSpec = MeasureSpec.makeMeasureSpec(LayoutParams.MATCH_PARENT, MeasureSpec.EXACTLY);
-        int heightMeasureSpec = MeasureSpec.makeMeasureSpec(LayoutParams.WRAP_CONTENT, MeasureSpec.EXACTLY);
+        //int heightMeasureSpec = MeasureSpec.makeMeasureSpec(LayoutParams.WRAP_CONTENT, MeasureSpec.EXACTLY);
+        int heightMeasureSpec = (int) context.getResources().getDimension(R.dimen.abs__action_bar_default_height);
+        
         realHeader.measure(widthMeasureSpec, heightMeasureSpec);
         headerHeight = realHeader.getMeasuredHeight();
 
